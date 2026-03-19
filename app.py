@@ -5,12 +5,14 @@ import json
 
 app = Flask(__name__)
 
+# URL do seu Apps Script do Google (Mantenha a sua se for diferente)
 URL_GOOGLE = "https://script.google.com/macros/s/AKfycbzR6SGpx47m2tuOGRkHrG3qt2aMFrBcR1JXtTk04WV2Sf82xtt2F9JyVSM3yS5FAPMN/exec"
 
+# Inteligência baseada no Guia NR-01 revisado
 MAPA_RISCOS = {
     "Demanda": {
         "perigo": "Excesso de demandas no trabalho (sobrecarga)",
-        "consequencia": "Transtorno mental; DORT; Doenças cardiovasculares",
+        "consequencia": "Transtorno mental; DORT; Fadiga",
         "medida": "Priorização de tarefas; pausas regulares; redimensionamento de equipe; flexibilização de horários."
     },
     "Controle": {
@@ -40,21 +42,41 @@ MAPA_RISCOS = {
     }
 }
 
+# 30 Questões categorizadas para o Inventário de Riscos
 QUESTOES = [
-    {"id": 1, "texto": "Você sente que precisa correr ou trabalhar muito rápido?", "dim": "Demanda"},
-    {"id": 2, "texto": "No final do dia, você se sente 'esgotado' mentalmente?", "dim": "Demanda"},
-    {"id": 3, "texto": "A chefia entrega tarefas com prazos impossíveis?", "dim": "Demanda"},
-    {"id": 4, "texto": "Você pode opinar sobre como o trabalho é organizado?", "dim": "Controle"},
-    {"id": 5, "texto": "Você consegue escolher a ordem das tarefas?", "dim": "Controle"},
-    {"id": 6, "texto": "Seus colegas te ajudam quando o bicho pega?", "dim": "Suporte"},
-    {"id": 7, "texto": "O supervisor te ajuda a resolver problemas?", "dim": "Suporte"},
-    {"id": 8, "texto": "Existe respeito e educação entre todos?", "dim": "Relacionamento"},
-    {"id": 9, "texto": "Você sofre pressão chata ou fofoca de colegas?", "dim": "Relacionamento"},
-    {"id": 10, "texto": "Você sabe exatamente o que a empresa espera de você?", "dim": "Papel"},
-    {"id": 11, "texto": "A empresa avisa antes de mudar seu horário ou equipe?", "dim": "Mudanca"}
+    {"id": 1, "texto": "Você precisa trabalhar muito rápido?", "dim": "Demanda"},
+    {"id": 2, "texto": "Seu trabalho exige muito esforço emocional?", "dim": "Demanda"},
+    {"id": 3, "texto": "Você tem tempo suficiente para concluir suas tarefas?", "dim": "Demanda"},
+    {"id": 4, "texto": "O volume de trabalho é excessivo?", "dim": "Demanda"},
+    {"id": 5, "texto": "Você precisa trabalhar horas extras com frequência?", "dim": "Demanda"},
+    {"id": 6, "texto": "Você pode influenciar a quantidade de trabalho que recebe?", "dim": "Controle"},
+    {"id": 7, "texto": "Você tem voz sobre como o trabalho é organizado?", "dim": "Controle"},
+    {"id": 8, "texto": "Você pode escolher o seu ritmo de trabalho?", "dim": "Controle"},
+    {"id": 9, "texto": "O trabalho permite que você aprenda coisas novas?", "dim": "Controle"},
+    {"id": 10, "texto": "Você tem autonomia para tomar decisões importantes?", "dim": "Controle"},
+    {"id": 11, "texto": "Seus colegas ouvem seus problemas de trabalho?", "dim": "Suporte"},
+    {"id": 12, "texto": "Você recebe apoio dos colegas quando precisa?", "dim": "Suporte"},
+    {"id": 13, "texto": "Seu superior direto apoia o seu desenvolvimento?", "dim": "Suporte"},
+    {"id": 14, "texto": "O supervisor ajuda a planejar bem as tarefas?", "dim": "Suporte"},
+    {"id": 15, "texto": "A empresa oferece recursos necessários para o trabalho?", "dim": "Suporte"},
+    {"id": 16, "texto": "Existe colaboração na sua equipe?", "dim": "Relacionamento"},
+    {"id": 17, "texto": "Você se sente respeitado no ambiente de trabalho?", "dim": "Relacionamento"},
+    {"id": 18, "texto": "Existem conflitos constantes entre os colegas?", "dim": "Relacionamento"},
+    {"id": 19, "texto": "Você já presenciou falta de ética no trabalho?", "dim": "Relacionamento"},
+    {"id": 20, "texto": "A comunicação interna é clara e educada?", "dim": "Relacionamento"},
+    {"id": 21, "texto": "Você sabe exatamente suas responsabilidades?", "dim": "Papel"},
+    {"id": 22, "texto": "Seus objetivos de trabalho são claros?", "dim": "Papel"},
+    {"id": 23, "texto": "Você recebe ordens conflitantes?", "dim": "Papel"},
+    {"id": 24, "texto": "Você entende como seu trabalho ajuda a empresa?", "dim": "Papel"},
+    {"id": 25, "texto": "As expectativas sobre seu cargo são bem definidas?", "dim": "Papel"},
+    {"id": 26, "texto": "A empresa avisa mudanças com antecedência?", "dim": "Mudanca"},
+    {"id": 27, "texto": "Você é consultado antes de mudanças no seu posto?", "dim": "Mudanca"},
+    {"id": 28, "texto": "Há treinamento quando algo novo é implementado?", "dim": "Mudanca"},
+    {"id": 29, "texto": "As mudanças recentes foram bem planejadas?", "dim": "Mudanca"},
+    {"id": 30, "texto": "Você se sente seguro quanto ao futuro na empresa?", "dim": "Mudanca"}
 ]
 
-OPCOES = [("0", "Nunca"), ("1", "Raramente"), ("2", "À vezes"), ("3", "Frequentemente"), ("4", "Sempre")]
+OPCOES = [("0", "Nunca"), ("1", "Raramente"), ("2", "Às vezes"), ("3", "Frequentemente"), ("4", "Sempre")]
 
 @app.route('/')
 def index():
@@ -78,6 +100,14 @@ def enviar():
         pontos_por_dim[q['dim']] += val
         total += val
 
+    # Critério UNISAFE de Classificação de Risco
+    if total <= 40:
+        status_texto = "BAIXO"
+    elif total <= 80:
+        status_texto = "MODERADO (ALERTA)"
+    else:
+        status_texto = "CRÍTICO (URGENTE)"
+
     dim_critica = max(pontos_por_dim, key=pontos_por_dim.get)
     info_risco = MAPA_RISCOS[dim_critica]
 
@@ -86,7 +116,7 @@ def enviar():
             "cliente": cliente_final,
             "setor": setor_escolhido,
             "pontuacao": total,
-            "status": "ALERTA" if total >= 15 else "OK", 
+            "status": status_texto,
             "perigo": info_risco["perigo"],
             "consequencia": info_risco["consequencia"],
             "medida": info_risco["medida"]
@@ -94,4 +124,7 @@ def enviar():
         requests.post(URL_GOOGLE, data=json.dumps(dados_envio), timeout=10)
     except: pass
 
-    return "<h1>Sucesso!</h1><p>Suas respostas foram registradas anonimamente. Obrigado por colaborar com a UNISAFE.</p>"
+    return "<h1>Sucesso!</h1><p>Diagnóstico concluído com anonimato garantido pela UNISAFE.</p>"
+
+if __name__ == '__main__':
+    app.run(debug=True)
