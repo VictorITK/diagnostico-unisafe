@@ -7,15 +7,17 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body { background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .card { border-radius: 20px; border: none; box-shadow: 0 10px 25px rgba(0,0,0,0.05); overflow: hidden; }
+        .card { border-radius: 20px; border: none; box-shadow: 0 10px 25px rgba(0,0,0,0.05); overflow: hidden; margin-bottom: 20px; }
         .header-unisafe { background-color: #004a87; color: white; padding: 30px; text-align: center; }
-        .btn-unisafe { background-color: #004a87; color: white; font-weight: bold; border-radius: 10px; padding: 12px 30px; transition: 0.3s; }
-        .btn-unisafe:hover { background-color: #003366; color: white; transform: translateY(-2px); }
-        .info-box { background-color: #e7f3ff; border-left: 5px solid #004a87; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .logo-unisafe { max-width: 180px; margin-bottom: 15px; }
+        .btn-unisafe { background-color: #004a87; color: white; font-weight: bold; border-radius: 10px; padding: 12px 30px; transition: 0.3s; text-decoration: none; display: inline-block; }
+        .btn-unisafe:hover { background-color: #003366; color: white; transform: translateY(-2px); text-decoration: none; }
+        .info-box { background-color: #e7f3ff; border-left: 5px solid #004a87; padding: 25px; border-radius: 8px; margin: 25px 0; text-align: left; }
+        .norm-box { background-color: #f8f9fa; border: 1px solid #e0e0e0; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: left; font-size: 0.9rem; }
         .question-row { padding: 20px; border-bottom: 1px solid #f0f0f0; background: white; transition: 0.2s; }
         .question-row:hover { background-color: #fdfdfd; }
         .hidden { display: none; }
-        #btn-enviar { display: none; width: 100%; padding: 18px; font-size: 1.2rem; font-weight: bold; border-radius: 12px; }
+        #btn-enviar { display: none; width: 100%; padding: 18px; font-size: 1.2rem; font-weight: bold; border-radius: 12px; margin-top: 30px; }
         .form-check-input:checked { background-color: #004a87; border-color: #004a87; }
     </style>
 </head>
@@ -24,19 +26,26 @@
 <div class="container py-5">
     <div id="tela-boas-vindas" class="card">
         <div class="header-unisafe">
-            <h2 class="mb-0">Portal de Diagnóstico SST</h2>
-            <p class="mb-0 opacity-75">{{ cliente }}</p>
+            <img src="https://i.ibb.co/Vvz4M8n/logo-unisafe.png" alt="UNISAFE - Saúde, Segurança e Ergonomia" class="logo-unisafe">
+            <h2 class="mb-1">Portal de Diagnóstico SST</h2>
+            <p class="mb-0 opacity-75">Empresa: {{ cliente }}</p>
         </div>
         <div class="p-5 text-center">
-            <p class="lead mb-4">Bem-vindo ao sistema de avaliação de bem-estar da <strong>UNISAFE</strong>.</p>
+            <p class="lead mb-4">Bem-vindo ao sistema de avaliação de bem-estar e condições de trabalho da <strong>UNISAFE</strong>.</p>
             
-            <div class="info-box text-start">
+            <div class="info-box">
                 <h5 class="mb-3" style="color: #004a87;">Orientações Importantes:</h5>
                 <ul class="mb-0">
                     <li class="mb-2"><strong>Objetivo:</strong> Identificar perigos nas condições de trabalho para prevenir adoecimentos, conforme a NR-01.</li>
-                    <li class="mb-2"><strong>Anonimato:</strong> Suas respostas são 100% confidenciais. Não coletamos nomes ou CPFs.</li>
-                    <li class="mb-0"><strong>Foco na Gestão:</strong> Avaliamos a organização do trabalho, e não o seu desempenho individual.</li>
+                    <li class="mb-2"><strong>Anonimato:</strong> Suas respostas são 100% confidenciais. Não coletamos nomes, CPFs ou e-mails.</li>
+                    <li class="mb-0"><strong>Foco na Gestão:</strong> Avaliamos a organização e concepção do trabalho, e não o seu desempenho individual.</li>
                 </ul>
+            </div>
+
+            <div class="norm-box">
+                <h6 class="text-muted mb-3">Referências Normativas e Metodologia:</h6>
+                <p class="mb-2">Este diagnóstico baseia-se nas diretrizes da <strong>NR-01 (Gerenciamento de Riscos Ocupacionais)</strong> e na metodologia recomendada pelo <strong>Guia de Riscos Psicossociais do Ministério do Trabalho e Previdência</strong>.</p>
+                <p class="mb-0">Utilizamos uma escala de Likert de 5 pontos para avaliar 30 fatores organizacionais, divididos em dimensões como Demanda, Controle, Suporte e Relacionamentos.</p>
             </div>
             
             <button class="btn btn-unisafe btn-lg mt-4" onclick="iniciarPesquisa()">Iniciar Diagnóstico</button>
@@ -51,7 +60,7 @@
             <input type="hidden" name="cliente_escondido" value="{{ cliente }}">
             <input type="hidden" name="modo_escondido" value="{{ modo }}">
             
-            <div class="mb-4 p-3 bg-light rounded">
+            <div class="mb-4 p-3 bg-light rounded shadow-sm">
                 <label class="form-label fw-bold">Em qual setor você trabalha?</label>
                 <select name="setor" id="setor" class="form-select form-select-lg" required onchange="verificarPreenchimento()">
                     <option value="">Selecione o seu setor...</option>
@@ -77,9 +86,9 @@
 
             <div class="mt-5">
                 <div id="aviso-preenchimento" class="alert alert-warning text-center border-0 shadow-sm">
-                    <strong>Atenção:</strong> Por favor, responda todas as questões para liberar o envio.
+                    <strong>Atenção:</strong> Por favor, responda todas as 30 questões para liberar o envio.
                 </div>
-                <button type="submit" id="btn-enviar" class="btn btn-success shadow">Finalizar e Enviar para UNISAFE</button>
+                <button type="submit" id="btn-enviar" class="btn btn-success shadow-lg">Finalizar e Enviar para UNISAFE</button>
             </div>
         </form>
     </div>
