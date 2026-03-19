@@ -7,7 +7,6 @@ app = Flask(__name__)
 
 URL_GOOGLE = "https://script.google.com/macros/s/AKfycbzR6SGpx47m2tuOGRkHrG3qt2aMFrBcR1JXtTk04WV2Sf82xtt2F9JyVSM3yS5FAPMN/exec"
 
-# Estrutura de inteligência baseada no Guia NR-01
 MAPA_RISCOS = {
     "Demanda": {
         "perigo": "Excesso de demandas no trabalho (sobrecarga)",
@@ -55,7 +54,7 @@ QUESTOES = [
     {"id": 11, "texto": "A empresa avisa antes de mudar seu horário ou equipe?", "dim": "Mudanca"}
 ]
 
-OPCOES = [("0", "Nunca"), ("1", "Raramente"), ("2", "Às vezes"), ("3", "Frequentemente"), ("4", "Sempre")]
+OPCOES = [("0", "Nunca"), ("1", "Raramente"), ("2", "À vezes"), ("3", "Frequentemente"), ("4", "Sempre")]
 
 @app.route('/')
 def index():
@@ -72,16 +71,13 @@ def enviar():
     cliente_final = request.form.get('cliente_escondido', 'UNISAFE')
     setor_escolhido = request.form.get('setor')
     
-    # Processamento por dimensões
     pontos_por_dim = {d: 0 for d in MAPA_RISCOS.keys()}
     total = 0
-    
     for q in QUESTOES:
         val = int(request.form.get(f"q{q['id']}", 0))
         pontos_por_dim[q['dim']] += val
         total += val
 
-    # Identifica a dimensão mais crítica (onde o bicho está pegando)
     dim_critica = max(pontos_por_dim, key=pontos_por_dim.get)
     info_risco = MAPA_RISCOS[dim_critica]
 
@@ -90,7 +86,7 @@ def enviar():
             "cliente": cliente_final,
             "setor": setor_escolhido,
             "pontuacao": total,
-            "status": "ALERTA" if total >= 25 else "OK", # Ajuste o limite conforme o n de perguntas
+            "status": "ALERTA" if total >= 15 else "OK", 
             "perigo": info_risco["perigo"],
             "consequencia": info_risco["consequencia"],
             "medida": info_risco["medida"]
@@ -98,8 +94,4 @@ def enviar():
         requests.post(URL_GOOGLE, data=json.dumps(dados_envio), timeout=10)
     except: pass
 
-    return "<h1>Pesquisa registrada!</h1><p>Obrigado. Os dados foram enviados para o Portal SST da UNISAFE.</p>"
-
-if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host='0.0.0.0', port=port)
+    return "<h1>Sucesso!</h1><p>Suas respostas foram registradas anonimamente. Obrigado por colaborar com a UNISAFE.</p>"
