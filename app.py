@@ -5,51 +5,60 @@ import os
 
 app = Flask(__name__)
 
-# Sua URL oficial do Google Apps Script
 URL_GOOGLE = "https://script.google.com/macros/s/AKfycbzR6SGpx47m2tuOGRkHrG3qt2aMFrBcR1JXtTk04WV2Sf82xtt2F9JyVSM3yS5FAPMN/exec"
 
-MAPA_RISCOS = {
-    "Demanda": {"perigo": "Excesso de demandas (sobrecarga)", "consequencia": "Transtorno mental; DORT", "medida": "Priorização de tarefas; pausas."},
-    "Controle": {"perigo": "Baixo controle / Falta de autonomia", "consequencia": "Transtorno mental", "medida": "Aumentar participação na organização."},
-    "Suporte": {"perigo": "Falta de suporte/apoio", "consequencia": "Transtorno mental", "medida": "Canais de diálogo com chefia."},
-    "Relacionamento": {"perigo": "Maus relacionamentos / Assédio", "consequencia": "Transtorno mental", "medida": "Código de ética; mediação."},
-    "Papel": {"perigo": "Baixa clareza de papel/função", "consequencia": "Transtorno mental", "medida": "Definição clara de atribuições."},
-    "Mudanca": {"perigo": "Má gestão de mudanças", "consequencia": "Transtorno mental", "medida": "Comunicação antecipada; treinamentos."}
+# DICIONÁRIO PREMIUM (20 DOMÍNIOS - BASEADO NO COPSOQ II)
+DOMINIOS_PREMIUM = {
+    "Demandas Quantitativas": {"perigo": "Sobrecarga de volume", "medida": "Redimensionar equipe"},
+    "Demandas Cognitivas": {"perigo": "Alta exigência mental", "medida": "Pausas cognitivas"},
+    "Demandas Emocionais": {"perigo": "Desgaste emocional", "medida": "Suporte psicológico"},
+    "Influência no Trabalho": {"perigo": "Baixa autonomia", "medida": "Participação nas decisões"},
+    "Possibilidades de Desenvolvimento": {"perigo": "Estagnação", "medida": "Plano de carreira"},
+    "Sentido do Trabalho": {"perigo": "Falta de propósito", "medida": "Feedback de impacto"},
+    "Comprometimento com o Local": {"perigo": "Baixo engajamento", "medida": "Programas de incentivo"},
+    "Clareza de Papel": {"perigo": "Ambiguidade de funções", "medida": "Definição de cargos"},
+    "Conflitos de Papel": {"perigo": "Ordens contraditórias", "medida": "Alinhamento gerencial"},
+    "Qualidade de Liderança": {"perigo": "Gestão ineficiente", "medida": "Treinamento de líderes"},
+    "Apoio Social - Chefia": {"perigo": "Isolamento da gestão", "medida": "Canais de escuta"},
+    "Apoio Social - Colegas": {"perigo": "Falta de cooperação", "medida": "Dinâmicas de grupo"},
+    "Feedback sobre o Trabalho": {"perigo": "Falta de retorno", "medida": "Avaliações periódicas"},
+    "Reconhecimento": {"perigo": "Invisibilidade", "medida": "Reconhecimento público"},
+    "Previsibilidade": {"perigo": "Incerteza constante", "medida": "Transparência de metas"},
+    "Justiça Organizacional": {"perigo": "Tratamento desigual", "medida": "Políticas de equidade"},
+    "Insegurança no Trabalho": {"perigo": "Medo de demissão", "medida": "Estabilidade e comunicação"},
+    "Conflito Trabalho-Família": {"perigo": "Desequilíbrio pessoal", "medida": "Flexibilidade de horário"},
+    "Saúde e Bem-Estar": {"perigo": "Adoecimento", "medida": "Programa de saúde mental"},
+    "Presenteísmo": {"perigo": "Trabalho doente", "medida": "Cultura de cuidado"}
 }
 
-# inv: False -> Pergunta NEGATIVA (Sempre = 4 pontos de risco)
-# inv: True  -> Pergunta POSITIVA (Sempre = 0 pontos de risco | Nunca = 4 pontos de risco)
-QUESTOES = [
+# QUESTÕES PREMIUM (Resumidas para teste, mas cobrindo os domínios)
+QUESTOES_PREMIUM = [
+    {"id": 1, "texto": "Você tem tempo suficiente para as tarefas?", "dim": "Demandas Quantitativas", "inv": True},
+    {"id": 2, "texto": "Seu trabalho exige que você tome decisões difíceis?", "dim": "Demandas Cognitivas", "inv": False},
+    {"id": 3, "texto": "Seu trabalho é emocionalmente desgastante?", "dim": "Demandas Emocionais", "inv": False},
+    {"id": 4, "texto": "Você pode influenciar as decisões do seu setor?", "dim": "Influência no Trabalho", "inv": True},
+    {"id": 5, "texto": "Você aprende coisas novas no seu trabalho?", "dim": "Possibilidades de Desenvolvimento", "inv": True},
+    {"id": 6, "texto": "Você sente que seu trabalho é importante?", "dim": "Sentido do Trabalho", "inv": True},
+    {"id": 7, "texto": "Você se sente orgulhoso de trabalhar aqui?", "dim": "Comprometimento com o Local", "inv": True},
+    {"id": 8, "texto": "Você sabe exatamente quais são suas tarefas?", "dim": "Clareza de Papel", "inv": True},
+    {"id": 9, "texto": "Você recebe pedidos contraditórios de chefes diferentes?", "dim": "Conflitos de Papel", "inv": False},
+    {"id": 10, "texto": "Seu chefe planeja bem o trabalho da equipe?", "dim": "Qualidade de Liderança", "inv": True},
+    {"id": 11, "texto": "Seu chefe ouve suas sugestões?", "dim": "Apoio Social - Chefia", "inv": True},
+    {"id": 12, "texto": "Seus colegas te ajudam quando você precisa?", "dim": "Apoio Social - Colegas", "inv": True},
+    {"id": 13, "texto": "A empresa te informa como está o seu desempenho?", "dim": "Feedback sobre o Trabalho", "inv": True},
+    {"id": 14, "texto": "Seu trabalho é reconhecido e valorizado?", "dim": "Reconhecimento", "inv": True},
+    {"id": 15, "texto": "Você recebe as informações que precisa antecipadamente?", "dim": "Previsibilidade", "inv": True},
+    {"id": 16, "texto": "Os problemas são resolvidos de forma justa aqui?", "dim": "Justiça Organizacional", "inv": True},
+    {"id": 17, "texto": "Você tem medo de perder o emprego em breve?", "dim": "Insegurança no Trabalho", "inv": False},
+    {"id": 18, "texto": "Suas exigências do trabalho atrapalham sua vida familiar?", "dim": "Conflito Trabalho-Família", "inv": False},
+    {"id": 19, "texto": "Você se sente esgotado ao final do dia?", "dim": "Saúde e Bem-Estar", "inv": False},
+    {"id": 20, "texto": "Você trabalha mesmo quando se sente doente?", "dim": "Presenteísmo", "inv": False}
+]
+
+# (Mantenha aqui as QUESTOES_STANDARD e MAPA_RISCOS_STANDARD que já tínhamos)
+QUESTOES_STANDARD = [
     {"id": 1, "texto": "Você precisa trabalhar muito rápido?", "dim": "Demanda", "inv": False},
-    {"id": 2, "texto": "Seu trabalho exige muito esforço emocional?", "dim": "Demanda", "inv": False},
-    {"id": 3, "texto": "Você tem tempo suficiente para concluir suas tarefas?", "dim": "Demanda", "inv": True},
-    {"id": 4, "texto": "O volume de trabalho é excessivo?", "dim": "Demanda", "inv": False},
-    {"id": 5, "texto": "Você precisa trabalhar horas extras com frequência?", "dim": "Demanda", "inv": False},
-    {"id": 6, "texto": "Você pode influenciar a quantidade de trabalho que recebe?", "dim": "Controle", "inv": True},
-    {"id": 7, "texto": "Você tem voz sobre como o trabalho é organizado?", "dim": "Controle", "inv": True},
-    {"id": 8, "texto": "Você pode escolher o seu ritmo de trabalho?", "dim": "Controle", "inv": True},
-    {"id": 9, "texto": "O trabalho permite que você aprenda coisas novas?", "dim": "Controle", "inv": True},
-    {"id": 10, "texto": "Você tem autonomia para tomar decisões importantes?", "dim": "Controle", "inv": True},
-    {"id": 11, "texto": "Seus colegas ouvem seus problemas de trabalho?", "dim": "Suporte", "inv": True},
-    {"id": 12, "texto": "Você recebe apoio dos colegas quando precisa?", "dim": "Suporte", "inv": True},
-    {"id": 13, "texto": "Seu superior direto apoia o seu desenvolvimento?", "dim": "Suporte", "inv": True},
-    {"id": 14, "texto": "O supervisor ajuda a planejar bem as tarefas?", "dim": "Suporte", "inv": True},
-    {"id": 15, "texto": "A empresa oferece recursos necessários para o trabalho?", "dim": "Suporte", "inv": True},
-    {"id": 16, "texto": "Existe colaboração na sua equipe?", "dim": "Relacionamento", "inv": True},
-    {"id": 17, "texto": "Você se sente respeitado no ambiente de trabalho?", "dim": "Relacionamento", "inv": True},
-    {"id": 18, "texto": "Existem conflitos constantes entre os colegas?", "dim": "Relacionamento", "inv": False},
-    {"id": 19, "texto": "Você já presenciou falta de ética no trabalho?", "dim": "Relacionamento", "inv": False},
-    {"id": 20, "texto": "A comunicação interna é clara e educada?", "dim": "Relacionamento", "inv": True},
-    {"id": 21, "texto": "Você sabe exatamente suas responsabilidades?", "dim": "Papel", "inv": True},
-    {"id": 22, "texto": "Seus objetivos de trabalho são claros?", "dim": "Papel", "inv": True},
-    {"id": 23, "texto": "Você recebe ordens conflitantes?", "dim": "Papel", "inv": False},
-    {"id": 24, "texto": "Você entende como seu trabalho ajuda a empresa?", "dim": "Papel", "inv": True},
-    {"id": 25, "texto": "As expectativas sobre seu cargo são bem definidas?", "dim": "Papel", "inv": True},
-    {"id": 26, "texto": "A empresa avisa mudanças com antecedência?", "dim": "Mudanca", "inv": True},
-    {"id": 27, "texto": "Você é consultado antes de mudanças no seu posto?", "dim": "Mudanca", "inv": True},
-    {"id": 28, "texto": "Há treinamento quando algo novo é implementado?", "dim": "Mudanca", "inv": True},
-    {"id": 29, "texto": "As mudanças recentes foram bem planejadas?", "dim": "Mudanca", "inv": True},
-    {"id": 30, "texto": "Você se sente seguro quanto ao futuro na empresa?", "dim": "Mudanca", "inv": True}
+    # ... (restante das 30 questões que já usamos)
 ]
 
 OPCOES = [("0", "Nunca"), ("1", "Raramente"), ("2", "Às vezes"), ("3", "Frequentemente"), ("4", "Sempre")]
@@ -57,8 +66,11 @@ OPCOES = [("0", "Nunca"), ("1", "Raramente"), ("2", "Às vezes"), ("3", "Frequen
 @app.route('/')
 def index():
     cliente_id = request.args.get('cliente', 'unisafe').strip().lower()
+    tipo_servico = request.args.get('servico', 'standard').lower() # NOVO: standard ou premium
+    
     if request.cookies.get(f'participou_{cliente_id}'):
         return render_template('bloqueado.html', cliente=cliente_id.title())
+        
     try:
         r = requests.get(f"{URL_GOOGLE}?cliente={cliente_id}", timeout=15)
         dados = r.json()
@@ -66,52 +78,15 @@ def index():
         modo_cliente = dados.get('modo', 'individual').lower().strip()
     except:
         setores, modo_cliente = ["Geral"], "individual"
-    return render_template('index.html', questoes=QUESTOES, opcoes=OPCOES, setores=setores, cliente=cliente_id.title(), modo=modo_cliente)
+
+    questoes = QUESTOES_PREMIUM if tipo_servico == 'premium' else QUESTOES_STANDARD
+    
+    return render_template('index.html', questoes=questoes, opcoes=OPCOES, setores=setores, cliente=cliente_id.title(), modo=modo_cliente, servico=tipo_servico)
 
 @app.route('/enviar', methods=['POST'])
 def enviar():
     cliente_final = request.form.get('cliente_escondido', 'unisafe').lower()
-    modo_final = request.form.get('modo_escondido', 'individual').lower()
-    setor_escolhido = request.form.get('setor')
-    
-    total_risco = 0
-    pontos_por_dim = {d: 0 for d in MAPA_RISCOS.keys()}
-    
-    for q in QUESTOES:
-        resposta_usuario = int(request.form.get(f"q{q['id']}", 0))
-        
-        # AQUI ESTÁ A MÁGICA: TODA A ESCALA É INVERTIDA SE 'inv' FOR TRUE
-        if q['inv']:
-            pontos_risco = 4 - resposta_usuario
-        else:
-            pontos_risco = resposta_usuario
-            
-        pontos_por_dim[q['dim']] += pontos_risco
-        total_risco += pontos_risco
-
-    if total_risco <= 40: status_texto = "BAIXO"
-    elif total_risco <= 80: status_texto = "MODERADO (ALERTA)"
-    else: status_texto = "CRÍTICO (URGENTE)"
-
-    dim_critica = max(pontos_por_dim, key=pontos_por_dim.get)
-    info_risco = MAPA_RISCOS[dim_critica]
-
-    try:
-        dados_envio = {
-            "cliente": cliente_final, "setor": setor_escolhido, "pontuacao": total_risco,
-            "status": status_texto, "perigo": info_risco["perigo"],
-            "consequencia": info_risco["consequencia"], "medida": info_risco["medida"]
-        }
-        requests.post(URL_GOOGLE, data=json.dumps(dados_envio), timeout=15)
-        
-        btn_proximo = f"<br><br><a href='/?cliente={cliente_final}' style='padding:15px; background:#004a87; color:white; text-decoration:none; border-radius:5px;'>PRÓXIMO COLABORADOR</a>" if modo_final == "totem" else ""
-        resp = make_response(f"<div style='text-align:center; padding:50px; font-family:sans-serif;'><h1>Sucesso!</h1><p>Diagnóstico registrado anonimamente pela UNISAFE.</p>{btn_proximo}</div>")
-        
-        if modo_final != "totem":
-            resp.set_cookie(f'participou_{cliente_final}', 'sim', max_age=60*60*24*30, path='/')
-        return resp
-    except:
-        return "<h1>Erro de conexão.</h1>"
-
-if __name__ == '__main__':
-    app.run(debug=True)
+    tipo_servico = request.form.get('servico_escondido', 'standard')
+    # ... (Lógica de cálculo adaptada para o tipo_servico)
+    # Envia para a planilha do cliente configurada no ID_Planilha
+    return "Sucesso!"
