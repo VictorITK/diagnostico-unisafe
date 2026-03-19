@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, make_response
+from flask import Flask, render_template, request, make_response, url_for
 import requests
 import json
 import os
@@ -56,7 +56,7 @@ OPCOES = [("0", "Nunca"), ("1", "Raramente"), ("2", "Às vezes"), ("3", "Frequen
 def index():
     cliente_id = request.args.get('cliente', 'unisafe').strip().lower()
     
-    # VERIFICAÇÃO DE COOKIE IMEDIATA
+    # Trava de segurança imediata
     if request.cookies.get(f'participou_{cliente_id}'):
         return render_template('bloqueado.html', cliente=cliente_id.title())
         
@@ -68,8 +68,7 @@ def index():
     except:
         setores, modo_cliente = ["Geral"], "individual"
 
-    # Se for individual, ele checa se o cookie existe (segunda trava)
-    if modo_cliente == "individual" and request.cookies.get(f'participou_{cliente_id}'):
+    if modo_cliente != "totem" and request.cookies.get(f'participou_{cliente_id}'):
         return render_template('bloqueado.html', cliente=cliente_id.title())
 
     return render_template('index.html', questoes=QUESTOES, opcoes=OPCOES, setores=setores, cliente=cliente_id.title(), modo=modo_cliente)
@@ -102,12 +101,11 @@ def enviar():
         }
         requests.post(URL_GOOGLE, data=json.dumps(dados_envio), timeout=15)
         
-        # Página de sucesso
         btn_proximo = f"<br><br><a href='/?cliente={cliente_final}' style='padding:15px; background:#004a87; color:white; text-decoration:none; border-radius:5px;'>PRÓXIMO COLABORADOR</a>" if modo_final == "totem" else ""
         
         resp = make_response(f"""
-            <div style='text-align:center; padding:50px; font-family:sans-serif; background-color:#f0f2f5; height:100vh;'>
-                <div style='background:white; padding:40px; border-radius:15px; box-shadow:0 4px 6px rgba(0,0,0,0.1); display:inline-block;'>
+            <div style='text-align:center; padding:50px; font-family:sans-serif; background-color:#f0f2f5; height:100vh; display:flex; align-items:center; justify-content:center;'>
+                <div style='background:white; padding:40px; border-radius:15px; box-shadow:0 4px 6px rgba(0,0,0,0.1);'>
                     <h1 style='color:#004a87;'>Sucesso!</h1>
                     <p>Sua participação foi registrada anonimamente. A <strong>UNISAFE</strong> agradece sua colaboração.</p>
                     {btn_proximo}
@@ -115,13 +113,12 @@ def enviar():
             </div>
         """)
         
-        # SALVA O COOKIE PARA BLOQUEAR ACESSO FUTURO
-        if modo_final == "individual":
+        if modo_final != "totem":
             resp.set_cookie(f'participou_{cliente_final}', 'sim', max_age=60*60*24*30, path='/')
         
         return resp
     except:
-        return "<h1>Erro de conexão com a planilha. Verifique o Google Apps Script.</h1>"
+        return "<h1>Erro de conexão. Verifique o Google Sheets.</h1>"
 
 if __name__ == '__main__':
     app.run(debug=True)
