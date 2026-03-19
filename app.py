@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, send_file, redirect, url_for
+from flask import Flask, render_template, request, send_file
 from fpdf import FPDF
 import os
 import requests
@@ -7,8 +7,8 @@ from datetime import datetime
 
 app = Flask(__name__)
 
-# URL do seu Apps Script (O mesmo de antes)
-URL_GOOGLE = "https://script.google.com/macros/s/AKfycbyappk_wCjT8uP_ZX_Bsm6b52oBQz8RgcnjMCa1-T6ya_Au0pqVetf3OId58cUelOLg/exec"
+# SEU NOVO LINK DO GOOGLE ATUALIZADO
+URL_GOOGLE = "https://script.google.com/macros/s/AKfycbzR6SGpx47m2tuOGRkHrG3qt2aMFrBcR1JXtTk04WV2Sf82xtt2F9JyVSM3yS5FAPMN/exec"
 
 QUESTOES = [
     {"id": 1, "texto": "Voce sente que precisa correr ou trabalhar muito rapido para dar conta de tudo?", "dim": "Demanda"},
@@ -21,7 +21,7 @@ QUESTOES = [
     {"id": 8, "texto": "O seu trabalho te ensina coisas novas ou te ajuda a crescer como profissional?", "dim": "Controle"},
     {"id": 9, "texto": "Se voce precisar de 5 minutos para ir ao banheiro ou tomar agua, voce consegue sair?", "dim": "Controle"},
     {"id": 10, "texto": "A empresa te escuta antes de mudar alguma regra que afeta o seu dia a dia?", "dim": "Controle"},
-    {"id": 11, "texto": "Se o bicho pegar no servico, voce sente que seus colegas te ajudam?", "dim": "Suporte"},
+    {"id": 11, "sia": "Se o bicho pegar no servico, voce sente que seus colegas te ajudam?", "dim": "Suporte"},
     {"id": 12, "texto": "O seu encarregado ou supervisor te ajuda a resolver problemas de trabalho?", "dim": "Suporte"},
     {"id": 13, "texto": "Alguem te avisa se o seu trabalho esta sendo bem feito ou se precisa melhorar?", "dim": "Suporte"},
     {"id": 14, "texto": "As ferramentas, EPIs e materiais que voce precisa estao sempre na mao?", "dim": "Suporte"},
@@ -47,40 +47,54 @@ OPCOES = [("0", "Nunca"), ("1", "Raramente"), ("2", "As vezes"), ("3", "Frequent
 
 @app.route('/')
 def index():
-    cliente_id = request.args.get('cliente', 'UNISAFE')
+    # Pega o cliente do link (ex: ?cliente=usaplas)
+    cliente_id = request.args.get('cliente', 'UNISAFE').strip().lower()
     
-    # BUSCA AS EMPRESAS NA PLANILHA GOOGLE
     try:
-        # Fazemos um pedido 'GET' para a planilha
-        r = requests.get(URL_GOOGLE + "?tipo=buscar_setores&cliente=" + cliente_id)
+        # Pergunta ao Google quais os setores desse cliente
+        r = requests.get(f"{URL_GOOGLE}?cliente={cliente_id}", timeout=10)
         dados = r.json()
         setores = dados.get('setores', ["Geral", "Administrativo", "Operacional"])
     except:
+        # Se o Google falhar, mostra o básico
         setores = ["Geral", "Administrativo", "Operacional"]
 
-    nome_exibicao = cliente_id.replace("_", " ")
+    nome_exibicao = cliente_id.replace("_", " ").title()
     return render_template('index.html', questoes=QUESTOES, opcoes=OPCOES, setores=setores, cliente=nome_exibicao)
 
 @app.route('/enviar', methods=['POST'])
 def enviar():
     cliente_final = request.form.get('cliente_escondido', 'UNISAFE')
-    setor = request.form.get('setor')
+    setor_escolhido = request.form.get('setor')
     respostas = {f"q{q['id']}": request.form.get(f"q{q['id']}") for q in QUESTOES}
     total = sum(int(v) for v in respostas.values() if v)
     status = "ALERTA" if total >= 60 else "OK"
 
-    # Envio para Planilha (Aba de Respostas)
+    # Envia a resposta para a planilha do Google
     try:
-        dados_json = {"tipo": "salvar_resposta", "cliente": cliente_final, "setor": setor, "pontuacao": total, "status": status}
-        requests.post(URL_GOOGLE, data=json.dumps(dados_json))
-    except: pass
+        dados_envio = {
+            "cliente": cliente_final,
+            "setor": setor_escolhido,
+            "pontuacao": total,
+            "status": status
+        }
+        requests.post(URL_GOOGLE, data=json.dumps(dados_envio), timeout=10)
+    except:
+        pass
 
+    # Gera o PDF do laudo
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", 'B', 16)
-    pdf.cell(0, 10, f"LAUDO SST - {cliente_final}", ln=True, align='C')
-    pdf.output("laudo.pdf")
-    return send_file("laudo.pdf", as_attachment=True)
+    pdf.cell(200, 10, f"LAUDO SST - {cliente_final}", ln=True, align='C')
+    pdf.ln(10)
+    pdf.set_font("Arial", '', 12)
+    pdf.cell(0, 10, f"Setor: {setor_escolhido}", ln=True)
+    pdf.cell(0, 10, f"Score: {total} / 120", ln=True)
+    
+    nome_arquivo = f"Laudo_{cliente_final}_{setor_escolhido}.pdf"
+    pdf.output(nome_arquivo)
+    return send_file(nome_arquivo, as_attachment=True)
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 10000))
