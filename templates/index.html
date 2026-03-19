@@ -9,7 +9,10 @@
         body { background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         .card { border-radius: 20px; border: none; box-shadow: 0 10px 25px rgba(0,0,0,0.05); overflow: hidden; margin-bottom: 20px; }
         .header-unisafe { background-color: #004a87; color: white; padding: 30px; text-align: center; }
-        .logo-unisafe { max-width: 160px; margin-bottom: 15px; border-radius: 10px; padding: 5px; }
+        
+        /* AJUSTE NA LOGO PARA USAR O ARQUIVO LOCAL */
+        .logo-unisafe { max-width: 160px; margin-bottom: 15px; border-radius: 10px; padding: 5px; background: white; }
+        
         .btn-unisafe { background-color: #004a87; color: white; font-weight: bold; border-radius: 10px; padding: 12px 30px; transition: 0.3s; text-decoration: none; display: inline-block; border: none; }
         .btn-unisafe:hover { background-color: #003366; color: white; transform: translateY(-2px); text-decoration: none; }
         .info-box { background-color: #e7f3ff; border-left: 5px solid #004a87; padding: 25px; border-radius: 8px; margin: 25px 0; text-align: left; }
@@ -27,7 +30,9 @@
 <div class="container py-5">
     <div id="tela-boas-vindas" class="card">
         <div class="header-unisafe">
-            <img src="https://i.postimg.cc/mDByf997/unisafe-logo.png" alt="UNISAFE" class="logo-unisafe">
+            
+            <img src="{{ url_for('static', filename='imagens/logo_unisafe.png') }}" alt="UNISAFE" class="logo-unisafe">
+            
             <h2 class="mb-1">Portal de Diagnóstico SST</h2>
             <div class="client-tag">Empresa: {{ cliente }}</div>
         </div>
@@ -40,7 +45,7 @@
                 <ul class="mb-0">
                     <li class="mb-2"><strong>Objetivo:</strong> Identificar perigos psicossociais para prevenir adoecimentos (NR-01).</li>
                     <li class="mb-2"><strong>Sigilo:</strong> Suas respostas são 100% anônimas e confidenciais.</li>
-                    <li class="mb-0"><strong>Foco:</strong> Avaliamos a organização do trabalho, não o seu desempenho.</li>
+                    <li class="mb-0"><strong>Foco:</strong> Avaliamos a organização do trabalho, não o seu desempenho individual.</li>
                 </ul>
             </div>
 
@@ -88,7 +93,7 @@
 
             <div class="mt-5">
                 <div id="aviso-preenchimento" class="alert alert-warning text-center border-0 shadow-sm">
-                    <strong>Atenção:</strong> Você deve responder todas as 30 perguntas para habilitar o envio.
+                    <strong>Atenção:</strong> Responda todas as 30 perguntas para habilitar o envio.
                 </div>
                 <button type="submit" id="btn-enviar" class="btn btn-success shadow-lg">Finalizar e Enviar para UNISAFE</button>
             </div>
@@ -104,7 +109,7 @@
     }
 
     function verificarPreenchimento() {
-        const totalQuestoes = 30; 
+        const totalQuestoes = 30; // Ajustado para o número total de perguntas
         const respondidas = document.querySelectorAll('input[type="radio"]:checked').length;
         const setor = document.getElementById('setor').value;
         
