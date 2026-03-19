@@ -1,48 +1,138 @@
-<div id="tela-boas-vindas" class="card">
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal de Diagnóstico SST - UNISAFE</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f4f7f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .card { border-radius: 15px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden; }
+        
+        /* Cabeçalho Profissional */
+        .header-unisafe { background-color: #ffffff; padding: 25px; text-align: center; border-bottom: 5px solid #004a87; }
+        .logo-unisafe { max-width: 220px; display: block; margin: 0 auto 15px auto; }
+        
+        .client-tag { font-size: 0.85rem; font-weight: bold; color: #004a87; background: #e7f3ff; padding: 5px 15px; border-radius: 20px; display: inline-block; }
+
+        /* Blocos de Informação */
+        .info-box { background-color: #ffffff; border-left: 6px solid #004a87; padding: 25px; border-radius: 10px; margin-bottom: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .norm-box { background-color: #f8f9fa; border: 1px solid #dee2e6; padding: 20px; border-radius: 10px; }
+        
+        .norm-title { color: #004a87; font-weight: bold; font-size: 0.95rem; margin-bottom: 15px; display: block; text-transform: uppercase; }
+        .norm-item { font-size: 0.85rem; color: #444; margin-bottom: 8px; }
+
+        /* Botão de Ação */
+        .btn-unisafe { background-color: #004a87; color: white; font-weight: bold; border-radius: 8px; padding: 15px 40px; transition: 0.3s; border: none; width: 100%; max-width: 400px; text-transform: uppercase; letter-spacing: 1px; }
+        .btn-unisafe:hover { background-color: #002d54; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,74,135,0.3); color: white; }
+
+        /* Questões */
+        .question-row { padding: 25px; border-bottom: 1px solid #eee; background: white; border-radius: 10px; margin-bottom: 15px; }
+        .hidden { display: none; }
+        #btn-enviar { display: none; width: 100%; padding: 20px; font-size: 1.2rem; font-weight: bold; border-radius: 10px; margin-top: 30px; }
+    </style>
+</head>
+<body>
+
+<div class="container py-5">
+    <div id="tela-boas-vindas" class="card">
         <div class="header-unisafe">
             <img src="{{ url_for('static', filename='imagens/logo_unisafe.png') }}" alt="UNISAFE" class="logo-unisafe">
-            <h2 class="mb-1">Portal de Diagnóstico SST</h2>
-            <div class="client-tag">ID Cliente: {{ cliente }} | Protocolo: {{ servico.upper() }}-2026</div>
+            <h4 class="fw-bold text-dark">Portal de Diagnóstico SST</h4>
+            <div class="client-tag">ID: {{ cliente }} | Protocolo: {{ servico.upper() }}-2026</div>
         </div>
-        <div class="p-5 text-center">
-            
+
+        <div class="card-body p-4 p-md-5">
             <div class="info-box">
-                <h5 class="mb-3" style="color: #004a87;"><i class="bi bi-shield-check"></i> Segurança e Compliance (LGPD):</h5>
-                <p class="text-muted small mb-3">
-                    Este sistema opera sob rígidos protocolos de <strong>LGPD Compliance</strong>. Os dados coletados são <strong>anonimizados na fonte</strong>, impedindo a identificação individual do colaborador. A UNISAFE garante a proteção da privacidade conforme a Lei nº 13.709/2018.
+                <h5 class="fw-bold mb-3" style="color: #004a87;">Segurança e Compliance (LGPD):</h5>
+                <p class="text-muted small">
+                    Este sistema opera sob rígidos protocolos de <strong>LGPD Compliance</strong>. Os dados coletados são <strong>anonimizados na fonte</strong>, impedindo a identificação individual. A UNISAFE garante a proteção da privacidade conforme a Lei nº 13.709/2018.
                 </p>
-                <ul class="mb-0 text-start">
-                    <li class="mb-2"><strong>Anonimato Garantido:</strong> Não coletamos nomes, CPFs ou e-mails.</li>
-                    <li class="mb-2"><strong>Criptografia:</strong> Tráfego de dados protegido para garantir a integridade da informação.</li>
-                    <li class="mb-2"><strong>Uso Exclusivo:</strong> Dados destinados apenas para fins estatísticos de saúde ocupacional.</li>
+                <ul class="text-start small mb-0">
+                    <li><strong>Anonimato Garantido:</strong> Não coletamos nomes, CPFs ou dados pessoais identificáveis.</li>
+                    <li><strong>Criptografia:</strong> Tráfego de dados seguro para garantir a integridade da informação.</li>
+                    <li><strong>Uso Exclusivo:</strong> Dados destinados apenas para fins estatísticos de saúde ocupacional.</li>
                 </ul>
             </div>
 
             <div class="norm-box">
-                <h6 class="fw-bold mb-3" style="color: #004a87;">Fundamentação Normativa:</h6>
-                <div class="row text-start g-3">
-                    <div class="col-md-6">
-                        <small><strong>NR-01 (MTE):</strong> Identificação de Perigos e Gestão de Riscos Ocupacionais (GRO/PGR).</small>
-                    </div>
-                    <div class="col-md-6">
-                        <small><strong>ISO 45003:</strong> Gestão da saúde e segurança psicológica no trabalho.</small>
-                    </div>
-                    <div class="col-md-6">
-                        <small><strong>NR-17 (Ergonomia):</strong> Avaliação de fatores psicossociais e organizacionais.</small>
-                    </div>
-                    <div class="col-md-6">
-                        <small><strong>COPSOQ III:</strong> Metodologia internacional de avaliação psicossocial.</small>
-                    </div>
+                <span class="norm-title">Fundamentação Normativa Ocupacional:</span>
+                <div class="row text-start">
+                    <div class="col-md-6 norm-item"><strong>• NR-01 (MTE):</strong> Identificação de Perigos e Gestão de Riscos (GRO/PGR).</div>
+                    <div class="col-md-6 norm-item"><strong>• ISO 45003:</strong> Gestão da saúde e segurança psicológica no trabalho.</div>
+                    <div class="col-md-6 norm-item"><strong>• NR-17 (Ergonomia):</strong> Avaliação de fatores psicossociais organizacionais.</div>
+                    <div class="col-md-6 norm-item"><strong>• COPSOQ III:</strong> Metodologia internacional de avaliação psicossocial.</div>
                 </div>
             </div>
 
-            <p class="mt-4 text-muted" style="font-size: 0.85rem;">
-                Ao iniciar, você contribui para um ambiente de trabalho mais seguro e saudável. 
-                Sua resposta é fundamental para o <strong>Inventário de Riscos</strong> da empresa.
-            </p>
-
-            <button class="btn btn-unisafe btn-lg mt-3 w-100" style="max-width: 400px;" onclick="iniciarPesquisa()">
-                Iniciar Inventário Técnico ({{ questoes|length }} questões)
-            </button>
+            <div class="text-center mt-4">
+                <p class="text-muted small mb-4">Ao iniciar, você contribui para um ambiente seguro. Sua resposta é fundamental para o <strong>Inventário de Riscos</strong>.</p>
+                <button class="btn-unisafe" onclick="iniciarPesquisa()">
+                    Iniciar Inventário Técnico ({{ questoes|length }} questões)
+                </button>
+            </div>
         </div>
     </div>
+
+    <div id="tela-formulario" class="card hidden">
+        <div class="header-unisafe" style="padding: 15px;">
+            <h5 class="fw-bold mb-0">Coleta de Dados - Inventário de Riscos</h5>
+        </div>
+        <form id="form-diagnostico" class="p-4" action="/enviar" method="POST">
+            <input type="hidden" name="cliente_escondido" value="{{ cliente }}">
+            <input type="hidden" name="servico_escondido" value="{{ servico }}">
+            <input type="hidden" name="modo_escondido" value="{{ modo }}">
+            
+            <div class="mb-4 p-4 bg-light rounded border">
+                <label class="form-label fw-bold text-dark">Selecione seu Setor:</label>
+                <select name="setor" id="setor" class="form-select form-select-lg" required onchange="verificarPreenchimento()">
+                    <option value="">Escolha...</option>
+                    {% for s in setores %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+                </select>
+            </div>
+
+            {% for q in questoes %}
+            <div class="question-row shadow-sm border">
+                <p class="fw-bold text-dark mb-3">{{ loop.index }}. {{ q.texto }}</p>
+                <div class="d-flex flex-wrap gap-3">
+                    {% for val, label in opcoes %}
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="q{{ q.id }}" value="{{ val }}" required onchange="verificarPreenchimento()">
+                        <label class="form-check-label small text-muted">{{ label }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+
+            <div class="mt-4">
+                <div id="aviso-preenchimento" class="alert alert-warning text-center fw-bold">
+                    Atenção: Responda todas as {{ questoes|length }} questões para habilitar o envio.
+                </div>
+                <button type="submit" id="btn-enviar" class="btn btn-success shadow">FINALIZAR E ENVIAR AO PGR</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function iniciarPesquisa() {
+        document.getElementById('tela-boas-vindas').classList.add('hidden');
+        document.getElementById('tela-formulario').classList.remove('hidden');
+        window.scrollTo(0, 0);
+    }
+    function verificarPreenchimento() {
+        const total = {{ questoes|length }};
+        const respondidas = document.querySelectorAll('input[type="radio"]:checked').length;
+        const setor = document.getElementById('setor').value;
+        if (respondidas === total && setor !== "") {
+            document.getElementById('btn-enviar').style.display = 'block';
+            document.getElementById('aviso-preenchimento').style.display = 'none';
+        } else {
+            document.getElementById('btn-enviar').style.display = 'none';
+            document.getElementById('aviso-preenchimento').style.display = 'block';
+        }
+    }
+</script>
+</body>
+</html>
