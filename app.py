@@ -7,8 +7,16 @@ from datetime import datetime
 
 app = Flask(__name__)
 
-# URL DA SUA PLANILHA GOOGLE (JÁ CONFIGURADA)
+# Sua URL do Google Sheets já configurada
 URL_GOOGLE_PLANILHA = "https://script.google.com/macros/s/AKfycbyappk_wCjT8uP_ZX_Bsm6b52oBQz8RgcnjMCa1-T6ya_Au0pqVetf3OId58cUelOLg/exec"
+
+# DICIONÁRIO DE CLIENTES E SETORES
+# Para adicionar um novo cliente, basta criar uma linha nova aqui seguindo o padrão
+CONFIG_CLIENTES = {
+    "Moveis_Conforto": ["Marcenaria", "Pintura", "Vendas", "Administrativo", "Logistica"],
+    "GBK_Power": ["Manutencao", "Operacional", "Engenharia", "Seguranca"],
+    "Intertek": ["Inspecao", "Laboratorio", "Campo", "RH"]
+}
 
 QUESTOES = [
     {"id": 1, "texto": "Voce sente que precisa correr ou trabalhar muito rapido para dar conta de tudo?", "dim": "Demanda"},
@@ -47,41 +55,62 @@ OPCOES = [("0", "Nunca"), ("1", "Raramente"), ("2", "As vezes"), ("3", "Frequent
 
 @app.route('/')
 def index():
-    setores = ["Operacional", "Administrativo", "Logistica", "Manutencao", "Embarcado", "Almoxarifado"]
-    return render_template('index.html', questoes=QUESTOES, opcoes=OPCOES, setores=setores)
+    # Detecta o cliente pela URL (ex: ?cliente=GBK_Power)
+    cliente_id = request.args.get('cliente', 'UNISAFE')
+    setores = CONFIG_CLIENTES.get(cliente_id, ["Geral", "Administrativo", "Operacional"])
+    nome_exibicao = cliente_id.replace("_", " ")
+    return render_template('index.html', questoes=QUESTOES, opcoes=OPCOES, setores=setores, cliente=nome_exibicao)
 
 @app.route('/enviar', methods=['POST'])
 def enviar():
+    cliente_final = request.form.get('cliente_escondido', 'UNISAFE')
     setor_escolhido = request.form.get('setor')
     respostas = {f"q{q['id']}": request.form.get(f"q{q['id']}") for q in QUESTOES}
+    
+    # Cálculo do Score
     total = sum(int(v) for v in respostas.values() if v)
     status = "ALERTA" if total >= 60 else "OK"
 
-    # ENVIANDO PARA O GOOGLE SHEETS
+    # ENVIO PARA GOOGLE SHEETS
     try:
-        dados_json = {
+        dados_planilha = {
+            "cliente": cliente_final,
             "setor": setor_escolhido,
             "pontuacao": total,
             "status": status
         }
-        # O timeout de 5 segundos evita que o site trave se o Google demorar
-        requests.post(URL_GOOGLE_PLANILHA, data=json.dumps(dados_json), timeout=5)
-    except Exception as e:
-        print(f"Erro ao salvar na planilha: {e}")
+        requests.post(URL_GOOGLE_PLANILHA, data=json.dumps(dados_planilha), timeout=5)
+    except:
+        pass
 
     # GERAÇÃO DO PDF
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", 'B', 16)
-    pdf.cell(200, 10, "UNISAFE - DIAGNOSTICO PSICOSSOCIAL", ln=True, align='C')
+    pdf.cell(200, 10, f"LAUDO PSICOSSOCIAL - {cliente_final}", ln=True, align='C')
     pdf.ln(10)
-    pdf.set_font("Arial", '', 11)
-    pdf.cell(100, 8, f"Setor: {setor_escolhido}")
-    pdf.cell(100, 8, f"Data: {datetime.now().strftime('%d/%m/%Y')}", ln=True)
-    pdf.set_font("Arial", 'B', 14)
-    pdf.cell(0, 12, f"PONTUACAO DE RISCO: {total} / 120", border=1, ln=True, align='C')
     
-    nome_arquivo = f"Laudo_SST_{setor_escolhido}.pdf"
+    pdf.set_font("Arial", '', 11)
+    pdf.cell(100, 8, f"Empresa: {cliente_final}")
+    pdf.cell(100, 8, f"Setor Avaliado: {setor_escolhido}", ln=True)
+    pdf.cell(100, 8, f"Data: {datetime.now().strftime('%d/%m/%Y')}", ln=True)
+    pdf.ln(5)
+    
+    pdf.set_font("Arial", 'B', 14)
+    pdf.set_fill_color(240, 240, 240)
+    pdf.cell(0, 12, f"PONTUACAO DE RISCO: {total} / 120", border=1, ln=True, fill=True, align='C')
+    pdf.ln(10)
+    
+    # Nota Técnica
+    pdf.set_font("Arial", 'B', 10)
+    pdf.cell(0, 8, "Observacoes Tecnicas:", ln=True)
+    pdf.set_font("Arial", 'I', 9)
+    nota = ("As questoes foram adaptadas para o vocabulario operacional visando reduzir o vies "
+            "de interpretacao, mantendo a correlacao direta com os indicadores de 'Mudanca' "
+            "do padrao HSE e ISO 45003.")
+    pdf.multi_cell(0, 6, nota)
+    
+    nome_arquivo = f"Laudo_{cliente_final}_{setor_escolhido}.pdf"
     pdf.output(nome_arquivo)
     return send_file(nome_arquivo, as_attachment=True)
 
