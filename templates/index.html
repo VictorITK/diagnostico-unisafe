@@ -3,66 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UNISAFE - {{ cliente }}</title>
+    <title>Diagnóstico SST - UNISAFE</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background-color: #f8fafc; color: #334155; }
-        .metodologia { background: #fff; border-left: 6px solid #002d5b; padding: 20px; border-radius: 8px; margin-bottom: 25px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .header-unisafe { background-color: #002d5b; color: white; border-radius: 12px 12px 0 0; padding: 30px; }
-        .pergunta-card { background: white; padding: 20px; border-bottom: 1px solid #e2e8f0; }
-        .dim-tag { font-size: 0.7rem; color: #64748b; font-weight: bold; background: #f1f5f9; padding: 3px 8px; border-radius: 10px; }
+        body { background-color: #f4f7f6; font-family: sans-serif; }
+        .card { border-radius: 15px; border: none; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .btn-unisafe { background-color: #004a87; color: white; font-weight: bold; }
+        .btn-unisafe:hover { background-color: #003366; color: white; }
+        .question-row { padding: 15px; border-bottom: 1px solid #eee; }
+        .hidden { display: none; }
+        #btn-enviar { display: none; width: 100%; padding: 15px; font-size: 1.2rem; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="container mt-5 mb-5">
-        <div class="text-center mb-5">
-            <img src="{{ url_for('static', filename='imagens/logo_unisafe.png') }}" style="max-width: 200px;">
-        </div>
 
-        <div class="metodologia">
-            <h5 class="fw-bold">Habilitação Técnica UNISAFE</h5>
-            <p class="mb-0 text-muted">Diagnóstico personalizado para <strong>{{ cliente }}</strong>. Baseado em HSE e ISO 45003.</p>
+<div class="container py-5">
+    <div id="tela-boas-vindas" class="card p-5 text-center">
+        <h2 class="mb-4">Portal de Diagnóstico SST - {{ cliente }}</h2>
+        <p class="lead">Bem-vindo ao sistema de avaliação da <strong>UNISAFE</strong>.</p>
+        <div class="alert alert-info text-start">
+            <strong>Orientações da NR-01:</strong><br><br>
+            <ul>
+                <li><strong>Objetivo:</strong> Identificar perigos nas condições de trabalho para prevenir adoecimentos[cite: 40].</li>
+                <li><strong>Anonimato:</strong> Suas respostas são 100% anônimas[cite: 154].</li>
+                <li><strong>Foco:</strong> Avaliamos a gestão e organização do trabalho, não você[cite: 71, 286].</li>
+            </ul>
         </div>
+        <button class="btn btn-unisafe btn-lg px-5" onclick="iniciarPesquisa()">Iniciar Diagnóstico</button>
+    </div>
 
-        <form action="/enviar" method="POST">
+    <div id="tela-formulario" class="card p-4 hidden">
+        <form id="form-diagnostico" action="/enviar" method="POST">
             <input type="hidden" name="cliente_escondido" value="{{ cliente }}">
+            
+            <div class="mb-4">
+                <label class="form-label fw-bold">Em qual setor você trabalha?</label>
+                <select name="setor" id="setor" class="form-select" required onchange="verificarPreenchimento()">
+                    <option value="">Escolha seu setor...</option>
+                    {% for s in setores %}
+                    <option value="{{ s }}">{{ s }}</option>
+                    {% endfor %}
+                </select>
+            </div>
 
-            <div class="card shadow border-0 overflow-hidden">
-                <div class="header-unisafe text-center">
-                    <h2 class="fw-bold">Pesquisa de Bem-estar no Trabalho</h2>
-                    <p class="mb-0">Setor: {{ cliente }} | Sua participação é anônima.</p>
-                </div>
+            <hr>
 
-                <div class="p-4 bg-light border-bottom">
-                    <label class="fw-bold mb-2">Em qual setor você trabalha?</label>
-                    <select name="setor" class="form-select form-select-lg" required>
-                        <option value="" disabled selected>Escolha seu setor...</option>
-                        {% for s in setores %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
-                    </select>
-                </div>
-
-                {% for q in questoes %}
-                <div class="pergunta-card">
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                        <span class="fs-5 fw-semibold">{{ loop.index }}. {{ q.texto }}</span>
-                        <span class="dim-tag">{{ q.dim }}</span>
+            {% for q in questoes %}
+            <div class="question-row">
+                <p class="fw-bold">{{ q.id }}. {{ q.texto }}</p>
+                <div class="d-flex flex-wrap gap-3">
+                    {% for val, label in opcoes %}
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="q{{ q.id }}" id="q{{ q.id }}_{{ val }}" value="{{ val }}" required onchange="verificarPreenchimento()">
+                        <label class="form-check-label" for="q{{ q.id }}_{{ val }}">{{ label }}</label>
                     </div>
-                    <div class="d-flex flex-wrap gap-3">
-                        {% for valor, texto in opcoes %}
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="q{{ q.id }}" id="q{{ q.id }}_{{ valor }}" value="{{ valor }}" required>
-                            <label class="form-check-label" for="q{{ q.id }}_{{ valor }}">{{ texto }}</label>
-                        </div>
-                        {% endfor %}
-                    </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
+            </div>
+            {% endfor %}
 
-                <div class="p-4 bg-white text-center">
-                    <button type="submit" class="btn btn-primary btn-lg px-5 fw-bold">FINALIZAR E GERAR LAUDO</button>
+            <div class="mt-4">
+                <div id="aviso-preenchimento" class="alert alert-warning text-center">
+                    Atenção: Responda todas as 30 perguntas para liberar o envio.
                 </div>
+                <button type="submit" id="btn-enviar" class="btn btn-success">Finalizar e Enviar para UNISAFE</button>
             </div>
         </form>
     </div>
+</div>
+
+<script>
+    function iniciarPesquisa() {
+        document.getElementById('tela-boas-vindas').classList.add('hidden');
+        document.getElementById('tela-formulario').classList.remove('hidden');
+        window.scrollTo(0, 0);
+    }
+
+    function verificarPreenchimento() {
+        const totalQuestoes = {{ questoes|length }};
+        const respondidas = document.querySelectorAll('input[type="radio"]:checked').length;
+        const setor = document.getElementById('setor').value;
+        
+        if (respondidas === totalQuestoes && setor !== "") {
+            document.getElementById('btn-enviar').style.display = 'block';
+            document.getElementById('aviso-preenchimento').style.display = 'none';
+        } else {
+            document.getElementById('btn-enviar').style.display = 'none';
+            document.getElementById('aviso-preenchimento').style.display = 'block';
+        }
+    }
+</script>
+
 </body>
 </html>
