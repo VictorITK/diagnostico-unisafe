@@ -5,7 +5,7 @@ import os
 
 app = Flask(__name__)
 
-# Sua URL oficial do Google
+# Sua URL oficial do Google Apps Script
 URL_GOOGLE = "https://script.google.com/macros/s/AKfycbzR6SGpx47m2tuOGRkHrG3qt2aMFrBcR1JXtTk04WV2Sf82xtt2F9JyVSM3yS5FAPMN/exec"
 
 MAPA_RISCOS = {
@@ -54,16 +54,21 @@ OPCOES = [("0", "Nunca"), ("1", "Raramente"), ("2", "Às vezes"), ("3", "Frequen
 
 @app.route('/')
 def index():
-    cliente_id = request.args.get('cliente', 'UNISAFE').strip().lower()
+    cliente_id = request.args.get('cliente', 'unisafe').strip().lower()
+    
+    # VERIFICAÇÃO DE COOKIE IMEDIATA
+    if request.cookies.get(f'participou_{cliente_id}'):
+        return render_template('bloqueado.html', cliente=cliente_id.title())
+        
     try:
         r = requests.get(f"{URL_GOOGLE}?cliente={cliente_id}", timeout=15)
         dados = r.json()
         setores = dados.get('setores', ["Geral"])
-        modo_cliente = dados.get('modo', 'individual').lower()
+        modo_cliente = dados.get('modo', 'individual').lower().strip()
     except:
         setores, modo_cliente = ["Geral"], "individual"
 
-    # TRAVA DE BLOQUEIO (Só funciona se o modo for 'individual')
+    # Se for individual, ele checa se o cookie existe (segunda trava)
     if modo_cliente == "individual" and request.cookies.get(f'participou_{cliente_id}'):
         return render_template('bloqueado.html', cliente=cliente_id.title())
 
@@ -71,8 +76,8 @@ def index():
 
 @app.route('/enviar', methods=['POST'])
 def enviar():
-    cliente_final = request.form.get('cliente_escondido', 'UNISAFE')
-    modo_final = request.form.get('modo_escondido', 'individual')
+    cliente_final = request.form.get('cliente_escondido', 'unisafe').lower()
+    modo_final = request.form.get('modo_escondido', 'individual').lower()
     setor_escolhido = request.form.get('setor')
     
     total = 0
@@ -97,11 +102,26 @@ def enviar():
         }
         requests.post(URL_GOOGLE, data=json.dumps(dados_envio), timeout=15)
         
+        # Página de sucesso
         btn_proximo = f"<br><br><a href='/?cliente={cliente_final}' style='padding:15px; background:#004a87; color:white; text-decoration:none; border-radius:5px;'>PRÓXIMO COLABORADOR</a>" if modo_final == "totem" else ""
-        resp = make_response(f"<div style='text-align:center; padding:50px; font-family:sans-serif;'><h1>Sucesso!</h1><p>Diagnóstico registrado anonimamente pela UNISAFE.</p>{btn_proximo}</div>")
         
+        resp = make_response(f"""
+            <div style='text-align:center; padding:50px; font-family:sans-serif; background-color:#f0f2f5; height:100vh;'>
+                <div style='background:white; padding:40px; border-radius:15px; box-shadow:0 4px 6px rgba(0,0,0,0.1); display:inline-block;'>
+                    <h1 style='color:#004a87;'>Sucesso!</h1>
+                    <p>Sua participação foi registrada anonimamente. A <strong>UNISAFE</strong> agradece sua colaboração.</p>
+                    {btn_proximo}
+                </div>
+            </div>
+        """)
+        
+        # SALVA O COOKIE PARA BLOQUEAR ACESSO FUTURO
         if modo_final == "individual":
-            resp.set_cookie(f'participou_{cliente_final}', 'sim', max_age=60*60*24*30)
+            resp.set_cookie(f'participou_{cliente_final}', 'sim', max_age=60*60*24*30, path='/')
+        
         return resp
     except:
         return "<h1>Erro de conexão com a planilha. Verifique o Google Apps Script.</h1>"
+
+if __name__ == '__main__':
+    app.run(debug=True)
