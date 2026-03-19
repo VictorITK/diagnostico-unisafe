@@ -3,7 +3,7 @@ from fpdf import FPDF
 import os
 from datetime import datetime
 
-# Configuração padrão do Flask (Ele buscará o index.html dentro da pasta /templates)
+# Configuração padrão: o Flask buscará automaticamente a pasta /templates
 app = Flask(__name__)
 
 # 30 Questões Humanizadas (Padrão UNISAFE - HSE/COPSOQ/ISO 45003)
@@ -42,7 +42,7 @@ QUESTOES = [
     {"id": 26, "texto": "A empresa te avisa com antecedencia se for mudar seu horario ou sua equipe?", "dim": "Mudanca"},
     {"id": 27, "texto": "A chefia te pergunta o que voce acha antes de mudar o seu jeito de trabalhar?", "dim": "Mudanca"},
     {"id": 28, "texto": "Quando chega uma maquina ou tecnologia nova, explicam bem como usar antes de comecar?", "dim": "Mudanca"},
-    {"id": 29, "texto": "Voce sente que seu emprego esta garantido e que nao sera mandado embora logo?", "dim": "Mudanca"},
+    {"id": 29, "texto": "Voce se sente tranquilo e seguro de que vai continuar no seu emprego nos proximos meses?", "dim": "Mudanca"},
     {"id": 30, "texto": "Quando muda alguma regra ou ferramenta, a chefia te treina e te ajuda a se adaptar?", "dim": "Mudanca"}
 ]
 
@@ -85,7 +85,7 @@ def enviar():
         pdf.multi_cell(0, 8, "[ALERTA] Risco elevado. Recomendada analise ergonomica organizacional e intervencao imediata no setor.")
     else:
         pdf.set_text_color(0, 100, 0)
-        pdf.cell(0, 8, "[STATUS] Nivel de bem-estar dentro dos parâmetros aceitaveis.", ln=True)
+        pdf.cell(0, 8, "[STATUS] Nivel de bem-estar dentro dos parametros aceitaveis.", ln=True)
     
     pdf.set_text_color(0, 0, 0)
     pdf.ln(10)
