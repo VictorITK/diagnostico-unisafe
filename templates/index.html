@@ -9,17 +9,17 @@
         body { background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         .card { border-radius: 20px; border: none; box-shadow: 0 10px 25px rgba(0,0,0,0.05); overflow: hidden; margin-bottom: 20px; }
         .header-unisafe { background-color: #004a87; color: white; padding: 30px; text-align: center; }
-        .logo-unisafe { max-width: 150px; margin-bottom: 15px; border-radius: 10px; background: white; padding: 5px; }
+        .logo-unisafe { max-width: 160px; margin-bottom: 15px; border-radius: 10px; padding: 5px; }
         .btn-unisafe { background-color: #004a87; color: white; font-weight: bold; border-radius: 10px; padding: 12px 30px; transition: 0.3s; text-decoration: none; display: inline-block; border: none; }
         .btn-unisafe:hover { background-color: #003366; color: white; transform: translateY(-2px); text-decoration: none; }
         .info-box { background-color: #e7f3ff; border-left: 5px solid #004a87; padding: 25px; border-radius: 8px; margin: 25px 0; text-align: left; }
-        .norm-box { background-color: #f8f9fa; border: 1px solid #e0e0e0; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: left; font-size: 0.9rem; color: #555; }
+        .norm-box { background-color: #f8f9fa; border: 1px solid #e0e0e0; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: left; font-size: 0.9rem; color: #444; }
         .question-row { padding: 20px; border-bottom: 1px solid #f0f0f0; background: white; transition: 0.2s; }
         .question-row:hover { background-color: #fdfdfd; }
         .hidden { display: none; }
         #btn-enviar { display: none; width: 100%; padding: 18px; font-size: 1.2rem; font-weight: bold; border-radius: 12px; margin-top: 30px; }
         .form-check-input:checked { background-color: #004a87; border-color: #004a87; }
-        .client-tag { font-size: 0.9rem; opacity: 0.8; background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 20px; display: inline-block; margin-top: 5px; }
+        .client-tag { font-size: 0.9rem; opacity: 0.9; background: rgba(255,255,255,0.2); padding: 5px 15px; border-radius: 20px; display: inline-block; margin-top: 8px; border: 1px solid rgba(255,255,255,0.3); }
     </style>
 </head>
 <body>
@@ -27,7 +27,7 @@
 <div class="container py-5">
     <div id="tela-boas-vindas" class="card">
         <div class="header-unisafe">
-            <img src="https://lh3.googleusercontent.com/d/1XlR7p8-q6p3o_A_A_4_C_J_T_H_U_T_J_Z" alt="UNISAFE" class="logo-unisafe">
+            <img src="https://i.postimg.cc/mDByf997/unisafe-logo.png" alt="UNISAFE" class="logo-unisafe">
             <h2 class="mb-1">Portal de Diagnóstico SST</h2>
             <div class="client-tag">Empresa: {{ cliente }}</div>
         </div>
@@ -45,7 +45,7 @@
             </div>
 
             <div class="norm-box">
-                <h6 class="fw-bold mb-2" style="color: #444;">Referências Normativas e Metodologia:</h6>
+                <h6 class="fw-bold mb-2" style="color: #004a87;">Referências Normativas e Metodologia:</h6>
                 <p class="mb-0">Este diagnóstico baseia-se nas diretrizes da <strong>NR-01 (GRO)</strong> e nas recomendações internacionais da <strong>ISO 45003 (Gestão de Riscos Psicossociais)</strong>. A metodologia utiliza 30 indicadores para a classificação de riscos e posterior elaboração do <strong>Plano de Ação (PGR)</strong>.</p>
             </div>
             
@@ -63,9 +63,9 @@
             <input type="hidden" name="modo_escondido" value="{{ modo }}">
             
             <div class="mb-4 p-4 bg-light rounded shadow-sm">
-                <label class="form-label fw-bold">Informe o seu Setor:</label>
+                <label class="form-label fw-bold">Selecione o seu Setor:</label>
                 <select name="setor" id="setor" class="form-select form-select-lg" required onchange="verificarPreenchimento()">
-                    <option value="">Selecione...</option>
+                    <option value="">Escolha uma opção...</option>
                     {% for s in setores %}
                     <option value="{{ s }}">{{ s }}</option>
                     {% endfor %}
@@ -88,7 +88,7 @@
 
             <div class="mt-5">
                 <div id="aviso-preenchimento" class="alert alert-warning text-center border-0 shadow-sm">
-                    <strong>Atenção:</strong> Responda todas as 30 perguntas para liberar o envio dos dados.
+                    <strong>Atenção:</strong> Você deve responder todas as 30 perguntas para habilitar o envio.
                 </div>
                 <button type="submit" id="btn-enviar" class="btn btn-success shadow-lg">Finalizar e Enviar para UNISAFE</button>
             </div>
@@ -104,7 +104,7 @@
     }
 
     function verificarPreenchimento() {
-        const totalQuestoes = 30; // Ajustado para as 30 perguntas
+        const totalQuestoes = 30; 
         const respondidas = document.querySelectorAll('input[type="radio"]:checked').length;
         const setor = document.getElementById('setor').value;
         
