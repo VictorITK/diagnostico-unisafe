@@ -5,8 +5,8 @@ import os
 
 app = Flask(__name__)
 
-# COLE SUA NOVA URL DO GOOGLE ABAIXO ENTRE AS ASPAS
-URL_GOOGLE = "COLE_AQUI_A_URL_DO_PASSO_9"
+# Sua URL oficial do Google
+URL_GOOGLE = "https://script.google.com/macros/s/AKfycbzR6SGpx47m2tuOGRkHrG3qt2aMFrBcR1JXtTk04WV2Sf82xtt2F9JyVSM3yS5FAPMN/exec"
 
 MAPA_RISCOS = {
     "Demanda": {"perigo": "Excesso de demandas (sobrecarga)", "consequencia": "Transtorno mental; DORT; Fadiga", "medida": "Priorização de tarefas; pausas regulares; redimensionamento de equipe."},
@@ -63,7 +63,7 @@ def index():
     except:
         setores, modo_cliente = ["Geral"], "individual"
 
-    # TRAVA DE BLOQUEIO
+    # TRAVA DE BLOQUEIO (Só funciona se o modo for 'individual')
     if modo_cliente == "individual" and request.cookies.get(f'participou_{cliente_id}'):
         return render_template('bloqueado.html', cliente=cliente_id.title())
 
@@ -104,4 +104,4 @@ def enviar():
             resp.set_cookie(f'participou_{cliente_final}', 'sim', max_age=60*60*24*30)
         return resp
     except:
-        return "<h1>Erro ao enviar para a planilha. Verifique a URL do Apps Script.</h1>"
+        return "<h1>Erro de conexão com a planilha. Verifique o Google Apps Script.</h1>"
