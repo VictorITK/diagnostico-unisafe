@@ -5,7 +5,6 @@ import os
 
 app = Flask(__name__)
 
-# Sua URL oficial do Google Apps Script
 URL_GOOGLE = "https://script.google.com/macros/s/AKfycbzR6SGpx47m2tuOGRkHrG3qt2aMFrBcR1JXtTk04WV2Sf82xtt2F9JyVSM3yS5FAPMN/exec"
 
 MAPA_RISCOS = {
@@ -55,11 +54,8 @@ OPCOES = [("0", "Nunca"), ("1", "Raramente"), ("2", "Às vezes"), ("3", "Frequen
 @app.route('/')
 def index():
     cliente_id = request.args.get('cliente', 'unisafe').strip().lower()
-    
-    # Trava de segurança imediata
     if request.cookies.get(f'participou_{cliente_id}'):
         return render_template('bloqueado.html', cliente=cliente_id.title())
-        
     try:
         r = requests.get(f"{URL_GOOGLE}?cliente={cliente_id}", timeout=15)
         dados = r.json()
@@ -67,10 +63,8 @@ def index():
         modo_cliente = dados.get('modo', 'individual').lower().strip()
     except:
         setores, modo_cliente = ["Geral"], "individual"
-
     if modo_cliente != "totem" and request.cookies.get(f'participou_{cliente_id}'):
         return render_template('bloqueado.html', cliente=cliente_id.title())
-
     return render_template('index.html', questoes=QUESTOES, opcoes=OPCOES, setores=setores, cliente=cliente_id.title(), modo=modo_cliente)
 
 @app.route('/enviar', methods=['POST'])
@@ -78,21 +72,17 @@ def enviar():
     cliente_final = request.form.get('cliente_escondido', 'unisafe').lower()
     modo_final = request.form.get('modo_escondido', 'individual').lower()
     setor_escolhido = request.form.get('setor')
-    
     total = 0
     pontos_por_dim = {d: 0 for d in MAPA_RISCOS.keys()}
     for q in QUESTOES:
         val = int(request.form.get(f"q{q['id']}", 0))
         pontos_por_dim[q['dim']] += val
         total += val
-
     if total <= 40: status_texto = "BAIXO"
     elif total <= 80: status_texto = "MODERADO (ALERTA)"
     else: status_texto = "CRÍTICO (URGENTE)"
-
     dim_critica = max(pontos_por_dim, key=pontos_por_dim.get)
     info_risco = MAPA_RISCOS[dim_critica]
-
     try:
         dados_envio = {
             "cliente": cliente_final, "setor": setor_escolhido, "pontuacao": total,
@@ -100,9 +90,7 @@ def enviar():
             "consequencia": info_risco["consequencia"], "medida": info_risco["medida"]
         }
         requests.post(URL_GOOGLE, data=json.dumps(dados_envio), timeout=15)
-        
         btn_proximo = f"<br><br><a href='/?cliente={cliente_final}' style='padding:15px; background:#004a87; color:white; text-decoration:none; border-radius:5px;'>PRÓXIMO COLABORADOR</a>" if modo_final == "totem" else ""
-        
         resp = make_response(f"""
             <div style='text-align:center; padding:50px; font-family:sans-serif; background-color:#f0f2f5; height:100vh; display:flex; align-items:center; justify-content:center;'>
                 <div style='background:white; padding:40px; border-radius:15px; box-shadow:0 4px 6px rgba(0,0,0,0.1);'>
@@ -112,10 +100,8 @@ def enviar():
                 </div>
             </div>
         """)
-        
         if modo_final != "totem":
             resp.set_cookie(f'participou_{cliente_final}', 'sim', max_age=60*60*24*30, path='/')
-        
         return resp
     except:
         return "<h1>Erro de conexão. Verifique o Google Sheets.</h1>"
